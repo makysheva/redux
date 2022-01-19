@@ -4,7 +4,6 @@ import { AddField } from './components/AddField';
 import { Item } from './components/Item';
 
 const reducer = (state, action) => {
-  console.log(666, state, action)
   if (action.type === 'ADD_TASK') {
     return [
       ...state,
@@ -17,12 +16,20 @@ const reducer = (state, action) => {
   }
 
   if (action.type === 'REMOVE_POST') {
-    return [
-      ...state,
-      {
-        id: state.filter(item => item.id !== action.payload.id)
+    return state.filter(item => item.id !== action.payload)
+  }
+
+  if (action.type === 'TOGGLE_COMPLETED') {
+    return state.map(obj => {
+      if (obj.id === action.payload) {
+        return {
+          ...obj,
+          completed: ! obj.completed
+        }
       }
-    ]
+
+      return obj
+    })
   }
 
   return state
@@ -60,6 +67,13 @@ const App = () => {
       });
   };
 
+  const toggleCompleted = (id) => {
+    return dispatch({
+      type: 'TOGGLE_COMPLETED',
+      payload: id
+    })
+  }
+
   return (
     <div className="App">
       <Paper className="wrapper">
@@ -86,6 +100,7 @@ const App = () => {
                   id={ item.id }
                   text={ item.text }
                   onRemove={ removeTask }
+                  onToggle={ () => toggleCompleted(item.id) }
                 />
               )
             })
