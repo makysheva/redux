@@ -1,25 +1,34 @@
-import { useReducer, useState } from 'react'
+import { useReducer } from 'react'
 import { Paper, Divider, Button, List, Tabs, Tab } from '@mui/material';
 import { AddField } from './components/AddField';
 import { Item } from './components/Item';
 
 const reducer = (state, action) => {
+  console.log(666, state, action)
   if (action.type === 'ADD_TASK') {
     return [
       ...state,
       {
-        id: action.id,
-        text: action.text,
-        completed: action.completed,
+        id: state[state.length - 1].id + 1,
+        text: action.payload.text,
+        completed: action.payload.checked,
       }
     ]
   }
+
+  if (action.type === 'REMOVE_POST') {
+    return [
+      ...state,
+      {
+        id: state.filter(item => item.id !== action.payload.id)
+      }
+    ]
+  }
+
   return state
 }
 
 const App = () => {
-  const [inputValue, setInputValue] = useState('')
-  const [isChecked, setIsChecked] = useState(false)
   const [state, dispatch] = useReducer(reducer, [
     {
       id: 1,
@@ -33,16 +42,23 @@ const App = () => {
     },
   ])
 
-  const addTask = () => {
+  const addTask = (text, checked) => {
     dispatch({
       type: 'ADD_TASK',
-      text: inputValue,
-      completed: isChecked,
+      payload: {
+        text,
+        checked,
+      }
     })
-
-    setInputValue('')
-    setIsChecked(false)
   }
+
+  const removeTask = (id) => {
+    if (window.confirm('Вы уверенны, что хотите удалить статью?'))
+      return dispatch({
+        type: 'REMOVE_POST',
+        payload: id,
+      });
+  };
 
   return (
     <div className="App">
@@ -51,11 +67,7 @@ const App = () => {
           <h4>Список задач</h4>
         </Paper>
         <AddField
-          onClickAdd={ addTask }
-          inputValue={ inputValue }
-          isChecked={ isChecked }
-          setInputValue={ setInputValue }
-          setIsChecked={ setIsChecked }
+          onAdd={ addTask }
         />
         <Divider />
         <Tabs value={0}>
@@ -68,7 +80,13 @@ const App = () => {
           {
             state.map(item => {
               return(
-                <Item key={ item.id } text={ item.text } />
+                <Item
+                  key={ item.id }
+                  checked={ item.completed }
+                  id={ item.id }
+                  text={ item.text }
+                  onRemove={ removeTask }
+                />
               )
             })
           }

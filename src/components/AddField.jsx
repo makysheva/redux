@@ -1,22 +1,19 @@
+import { useState } from 'react'
 import { TextField, Button, Checkbox } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 export const AddField = ({
-  onClickAdd,
-  inputValue,
-  isChecked,
-  setInputValue,
-  setIsChecked,
+  onAdd,
 }) => {
+  const [inputValue, setInputValue] = useState('')
+  const [isChecked, setIsChecked] = useState(false)
 
-  const onClickCheckbox = () => {
-    setIsChecked(isChecked => ! isChecked)
-  }
-
-  const onChangeInput = (event) => {
-    setInputValue(event.target.value)
+  const onClickAdd = () => {
+    onAdd(inputValue, isChecked)
+    setInputValue('')
+    setIsChecked(false)
   }
 
   return (
@@ -25,13 +22,13 @@ export const AddField = ({
         className="checkbox"
         checked={ isChecked }
         icon={<RadioButtonUncheckedIcon />}
-        onClick={ () => onClickCheckbox }
+        onChange={ (e) => setIsChecked(e.target.checked) }
         checkedIcon={<CheckCircleIcon />}
       />
       <TextField
         placeholder="Введите текст задачи..."
         variant="standard"
-        onChange={ onChangeInput }
+        onChange={ (e) => setInputValue(e.target.value) }
         value={ inputValue }
         fullWidth
       />
