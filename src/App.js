@@ -32,6 +32,16 @@ const reducer = (state, action) => {
     })
   }
 
+  if (action.type === 'RESET') {
+    return [
+      {
+        id: null,
+        text: '',
+        completed: null,
+      }
+    ]
+  }
+
   return state
 }
 
@@ -74,6 +84,14 @@ const App = () => {
     })
   }
 
+  const resetTasks = () => {
+    if (window.confirm('Вы уверенны, что хотите очистить все задачи?'))
+      return dispatch({
+        type: 'RESET',
+      })
+  }
+
+
   return (
     <div className="App">
       <Paper className="wrapper">
@@ -109,7 +127,7 @@ const App = () => {
         <Divider />
         <div className="check-buttons">
           <Button>Отметить всё</Button>
-          <Button>Очистить</Button>
+          <Button onClick={ () => resetTasks() }>Очистить</Button>
         </div>
       </Paper>
     </div>
