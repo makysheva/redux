@@ -4,60 +4,101 @@ import { AddField } from './components/AddField';
 import { Item } from './components/Item';
 
 const reducer = (state, action) => {
-  if (action.type === 'ADD_TASK') {
-    return [
-      ...state,
-      {
-        id: state[state.length - 1].id + 1,
-        text: action.payload.text,
-        completed: action.payload.checked,
-      }
-    ]
+  switch(action.type) {
+    case 'ADD_TASK':
+      return {
+        ...state,
+        tasks: [
+          ...state.tasks,
+          {
+            id: state.tasks[state.tasks.length - 1].id + 1,
+            text: action.payload.text,
+            completed: action.payload.checked,
+          }
+        ]
+      };
+
+    case 'REMOVE_POST':
+      return {
+        ...state,
+        tasks: state.tasks.filter(item => item.id !== action.payload)
+      };
+
+    case 'TOGGLE_COMPLETED':
+      return {
+        ...state,
+        tasks: state.tasks.map(obj =>
+          obj.id === action.payload
+          ? ({
+            ...obj,
+            completed: ! obj.completed
+          })
+          : obj
+        )
+      };
+
+    case 'EDIT_TASK':
+      return {
+        ...state,
+        tasks: state.tasks.map(obj =>
+          obj.id === action.payload.id
+            ? ({
+              ...obj,
+              text: action.payload.newTask
+            })
+            : obj
+        )
+      };
+
+    case 'RESET':
+      return {
+        ...state,
+        tasks: [],
+      };
+
+    case 'CHECK_ALL':
+      return {
+        ...state,
+        tasks: state.tasks.map(obj => ({
+            ...obj,
+            completed: true,
+          })
+        )
+      };
+
+    case 'SET_FILTER':
+      return {
+        ...state,
+        filterBy: action.payload
+      };
+
+    default:
+      return state
   }
+}
 
-  if (action.type === 'REMOVE_POST') {
-    return state.filter(item => item.id !== action.payload)
-  }
-
-  if (action.type === 'TOGGLE_COMPLETED') {
-    return state.map(obj => {
-      if (obj.id === action.payload) {
-        return {
-          ...obj,
-          completed: ! obj.completed
-        }
-      }
-
-      return obj
-    })
-  }
-
-  if (action.type === 'RESET') {
-    return [
-      {
-        id: null,
-        text: '',
-        completed: null,
-      }
-    ]
-  }
-
-  return state
+const filterIndex = {
+  'all': 0,
+  'active': 1,
+  'completed': 2,
 }
 
 const App = () => {
-  const [state, dispatch] = useReducer(reducer, [
-    {
-      id: 1,
-      text: 'Задача создана с помощью редьюсера',
-      completed: false,
-    },
-    {
-      id: 2,
-      text: 'Разобраться в редакс',
-      completed: true,
-    },
-  ])
+  const [state, dispatch] = useReducer(reducer, {
+    filterBy: 'all',
+    tasks: [
+      {
+        id: 1,
+        text: 'Задача создана с помощью редьюсера',
+        completed: false,
+      },
+      {
+        id: 2,
+        text: 'Разобраться в редакс',
+        completed: true,
+      },
+    ]
+  })
 
   const addTask = (text, checked) => {
     dispatch({
@@ -91,6 +132,31 @@ const App = () => {
       })
   }
 
+  const editTask = (id) => {
+    const newTask = window.prompt('Изменить задачу')
+    if(newTask)
+    return dispatch({
+      type: 'EDIT_TASK',
+      payload: {
+        id,
+        newTask,
+      }
+    })
+  }
+
+  const checkTasksAll = () => {
+    return dispatch({
+      type: 'CHECK_ALL',
+    })
+  }
+
+  const setFilter = (_, newIndex) => {
+    const status = Object.keys(filterIndex)[newIndex]
+    return dispatch({
+      type: 'SET_FILTER',
+      payload: status,
+    })
+  }
 
   return (
     <div className="App">
@@ -102,7 +168,7 @@ const App = () => {
           onAdd={ addTask }
         />
         <Divider />
-        <Tabs value={0}>
+        <Tabs onChange={ setFilter } value={ filterIndex[state.filterBy] }>
           <Tab label="Все" />
           <Tab label="Активные" />
           <Tab label="Завершённые" />
@@ -110,13 +176,27 @@ const App = () => {
         <Divider />
         <List>
           {
-            state.map(item => {
+            state.tasks
+            .filter((obj) => {
+              if (state.filterBy === 'all') {
+                return true
+              }
+
+              if (state.filterBy === 'completed') {
+                return obj.completed
+              }
+
+              if(state.filterBy === 'active'){
+                return ! obj.completed
+              }
+            }).map(item => {
               return(
                 <Item
                   key={ item.id }
                   checked={ item.completed }
                   id={ item.id }
                   text={ item.text }
+                  onEdit={ editTask }
                   onRemove={ removeTask }
                   onToggle={ () => toggleCompleted(item.id) }
                 />
@@ -126,8 +206,8 @@ const App = () => {
         </List>
         <Divider />
         <div className="check-buttons">
-          <Button>Отметить всё</Button>
-          <Button onClick={ () => resetTasks() }>Очистить</Button>
+          <Button disabled={ !state.tasks.length } onClick={ checkTasksAll }>Отметить всё</Button>
+          <Button disabled={ !state.tasks.length } onClick={ resetTasks }>Очистить</Button>
         </div>
       </Paper>
     </div>
