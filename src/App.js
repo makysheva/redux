@@ -1,76 +1,41 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { Paper, Divider, Button, List, Tabs, Tab } from '@mui/material';
+import { Paper, Divider, Button, List } from '@mui/material';
 import { AddField } from './components/AddField';
 import { Item } from './components/Item';
+import { Filter } from './components/Filter';
 
-
-
-const filterIndex = {
-  'all': 0,
-  'active': 1,
-  'completed': 2,
-}
+import { addTask, removeTask, toggleCompleted, resetTasks, editTask, checkTasksAll } from './redux/actions/tasks'
 
 const App = () => {
   const dispatch = useDispatch()
   const state = useSelector(state => state)
 
-  const addTask = (text, checked) => {
-    dispatch({
-      type: 'ADD_TASK',
-      payload: {
-        text,
-        checked,
-      }
-    })
+  const handleClickAdd = (text, checked) => {
+    dispatch(addTask(text, checked))
   }
 
-  const removeTask = (id) => {
+  const handleClickRemove = (id) => {
     if (window.confirm('Вы уверенны, что хотите удалить статью?'))
-      return dispatch({
-        type: 'REMOVE_POST',
-        payload: id,
-      });
+      return dispatch(removeTask(id));
   };
 
-  const toggleCompleted = (id) => {
-    return dispatch({
-      type: 'TOGGLE_COMPLETED',
-      payload: id
-    })
+  const handleChangeToggle = (id) => {
+    return dispatch(toggleCompleted(id))
   }
 
-  const resetTasks = () => {
+  const handleClickReset = () => {
     if (window.confirm('Вы уверенны, что хотите очистить все задачи?'))
-      return dispatch({
-        type: 'RESET',
-      })
+      return dispatch(resetTasks())
   }
 
-  const editTask = (id) => {
+  const handleClickEdit = (id) => {
     const newTask = window.prompt('Изменить задачу')
     if(newTask)
-    return dispatch({
-      type: 'EDIT_TASK',
-      payload: {
-        id,
-        newTask,
-      }
-    })
+      return dispatch(editTask(id, newTask))
   }
 
-  const checkTasksAll = () => {
-    return dispatch({
-      type: 'CHECK_ALL',
-    })
-  }
-
-  const setFilter = (_, newIndex) => {
-    const status = Object.keys(filterIndex)[newIndex]
-    return dispatch({
-      type: 'SET_FILTER',
-      payload: status,
-    })
+  const handleClickCheckAll = () => {
+    return dispatch(checkTasksAll())
   }
 
   return (
@@ -80,28 +45,24 @@ const App = () => {
           <h4>Список задач</h4>
         </Paper>
         <AddField
-          onAdd={ addTask }
+          onAdd={ handleClickAdd }
         />
         <Divider />
-        <Tabs onChange={ setFilter } value={ filterIndex[state.filterBy] }>
-          <Tab label="Все" />
-          <Tab label="Активные" />
-          <Tab label="Завершённые" />
-        </Tabs>
+        <Filter />
         <Divider />
         <List>
           {
             state.tasks
             .filter((obj) => {
-              if (state.filterBy === 'all') {
+              if (state.filter.filterBy === 'all') {
                 return true
               }
 
-              if (state.filterBy === 'completed') {
+              if (state.filter.filterBy === 'completed') {
                 return obj.completed
               }
 
-              if(state.filterBy === 'active'){
+              if(state.filter.filterBy === 'active'){
                 return ! obj.completed
               }
             }).map(item => {
@@ -111,9 +72,9 @@ const App = () => {
                   checked={ item.completed }
                   id={ item.id }
                   text={ item.text }
-                  onEdit={ editTask }
-                  onRemove={ removeTask }
-                  onToggle={ () => toggleCompleted(item.id) }
+                  onEdit={ handleClickEdit }
+                  onRemove={ handleClickRemove }
+                  onToggle={ () => handleChangeToggle(item.id) }
                 />
               )
             })
@@ -121,8 +82,8 @@ const App = () => {
         </List>
         <Divider />
         <div className="check-buttons">
-          <Button disabled={ !state.tasks.length } onClick={ checkTasksAll }>Отметить всё</Button>
-          <Button disabled={ !state.tasks.length } onClick={ resetTasks }>Очистить</Button>
+          <Button disabled={ !state.tasks.length } onClick={ handleClickCheckAll }>Отметить всё</Button>
+          <Button disabled={ !state.tasks.length } onClick={ handleClickReset }>Очистить</Button>
         </div>
       </Paper>
     </div>
